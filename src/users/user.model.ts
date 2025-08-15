@@ -5,6 +5,7 @@ import {
   DataType,
   PrimaryKey,
   Default,
+  AllowNull,
 } from 'sequelize-typescript';
 import { UserRole } from 'src/enums/role.enum';
 
@@ -37,4 +38,13 @@ export class User extends Model<User> {
     allowNull: false,
   })
   role: UserRole;
+
+  // Store tokens
+  @AllowNull(true)
+  @Column(DataType.TEXT)
+  access_token: string;
+
+  @AllowNull(true)
+  @Column(DataType.TEXT)
+  refresh_token: string;
 }
