@@ -24,6 +24,13 @@ async function bootstrap() {
     }),
   );
 
+  // Enable CORS only for localhost
+  app.enableCors({
+    origin: ['http://localhost:3000'], // frontend origin(s)
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // allowed HTTP methods
+    credentials: true, // allow cookies/auth headers
+  });
+
   const config = new DocumentBuilder()
     .setTitle('=Multi tenant Messaging Service')
     .setDescription('API for multi-tenant WAHA messaging integration')
