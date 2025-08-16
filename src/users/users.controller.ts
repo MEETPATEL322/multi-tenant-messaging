@@ -6,6 +6,8 @@ import {
   Req,
   UseGuards,
   ConflictException,
+  Query,
+  NotFoundException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import {
@@ -25,6 +27,7 @@ import {
   ApiResponse,
   ApiBody,
   ApiBearerAuth,
+  ApiQuery,
 } from '@nestjs/swagger';
 
 @ApiTags('Users')
@@ -135,5 +138,26 @@ export class UsersController {
   })
   async findAll(@Req() req) {
     return this.usersService.findAll(req.user.tenant_id, req.query.role);
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get all users for the current tenant' })
+  @ApiResponse({
+    status: 200,
+    description: 'Array of users returned successfully.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. User does not have permission.',
+  })
+  async findMe(@Req() req) {
+    const user = await this.usersService.findById(req.user.id);
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${req.user.id} not found`);
+    }
+
+    return user;
   }
 }

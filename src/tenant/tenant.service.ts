@@ -13,4 +13,7 @@ export class TenantService {
   async create(createTenantDto: Partial<CreateTenantDto>): Promise<Tenant> {
     return await this.tenantModel.create(createTenantDto);
   }
+  async findById(id: string): Promise<any> {
+    return await this.tenantModel.findByPk(id, { raw: true });
+  }
 }

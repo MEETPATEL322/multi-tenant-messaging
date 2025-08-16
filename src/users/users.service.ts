@@ -36,7 +36,7 @@ export class UsersService {
     user: User & { id?: number },
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const payloadBase = {
-      sub: user.id,
+      id: user.id,
       email: user.email,
       role: user.role,
       tenant_id: user.tenant_id,
@@ -102,7 +102,7 @@ export class UsersService {
       if (!user) throw new UnauthorizedException('Invalid credentials');
 
       const payloadBase = {
-        sub: user.id,
+        id: user.id,
         email: user.email,
         role: user.role,
         tenant_id: user.tenant_id,
@@ -141,5 +141,9 @@ export class UsersService {
       where: whereClause,
       raw: true,
     });
+  }
+
+  async findById(id: string): Promise<any> {
+    return await this.userModel.findByPk(id, { raw: true });
   }
 }

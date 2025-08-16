@@ -1,4 +1,13 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Get,
+  Param,
+  Req,
+  NotFoundException,
+} from '@nestjs/common';
 import { TenantService } from './tenant.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
@@ -12,6 +21,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiBody,
+  ApiParam,
 } from '@nestjs/swagger';
 
 @ApiTags('Tenants') // Group endpoints under "Tenants"
@@ -32,5 +42,25 @@ export class TenantController {
   })
   create(@Body() createTenantDto: CreateTenantDto) {
     return this.tenantService.create(createTenantDto);
+  }
+
+  @Get('/:id')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get tenant by ID' })
+  @ApiParam({ name: 'id', type: 'string', description: 'Tenant ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Tenant details returned successfully.',
+  })
+  @ApiResponse({ status: 404, description: 'Tenant not found.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async findOne(@Param('id') id: string) {
+    const tenant = await this.tenantService.findById(id);
+
+    if (!tenant) {
+      throw new NotFoundException(`Tenant with ID ${id} not found`);
+    }
+
+    return tenant;
   }
 }
