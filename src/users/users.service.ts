@@ -17,7 +17,11 @@ export class UsersService {
 
   // // Create user
   async create(createUserDto: Partial<CreateUserDto>): Promise<User> {
-    return await this.userModel.create(createUserDto);
+    const passwordHash = await bcrypt.hash(createUserDto.password_hash, 10);
+    return await this.userModel.create({
+      ...createUserDto,
+      password_hash: passwordHash,
+    });
   }
 
   async findByEmail(email: string): Promise<any | null> {
@@ -78,5 +82,50 @@ export class UsersService {
       ...user,
       tokens,
     };
+  }
+
+  async refreshToken(refreshToken: string) {
+    try {
+      const payload: any = jwt.verify(
+        refreshToken,
+        process.env.JWT_REFRESH_SECRET || 'refreshSecret',
+      );
+      console.log(payload, 'payload');
+      if (!payload?.email) {
+        throw new UnauthorizedException('Invalid refresh token payload');
+      }
+      const user = await User.findOne({
+        where: { email: payload.email },
+        raw: true,
+      });
+      if (!user) throw new UnauthorizedException('Invalid credentials');
+
+      const payloadBase = {
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+        tenant_id: user.tenant_id,
+      };
+
+      const accessToken = jwt.sign(
+        { ...payloadBase, token_type: 'access' },
+        process.env.JWT_ACCESS_SECRET ?? 'accessSecret',
+        { expiresIn: ACCESS_EXPIRES },
+      );
+
+      const updatedUser = await this.userModel.update(
+        {
+          access_token: accessToken,
+        },
+        {
+          where: { email: payload.email },
+        },
+      );
+
+      return { accessToken: accessToken };
+    } catch (err) {
+      console.log(err);
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
   }
 }

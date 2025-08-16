@@ -6,18 +6,57 @@ import {
   Patch,
   Param,
   Delete,
+  ConflictException,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto, LoginDto } from './dto/create-user.dto';
+import { CreateUserDto, LoginDto, RefreshDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Roles } from 'src/guard/roles.decorator';
+import { JwtAuthGuard } from 'src/guard/jwt-auth.guard';
+import { RolesGuard } from 'src/guard/roles.guard';
+import { UserRole } from 'src/enums/role.enum';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.MAIN_ADMIN)
+  async create(@Body() createUserDto: CreateUserDto) {
+    const existingUser = await this.usersService.findByEmail(
+      createUserDto.email,
+    );
+
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
+    }
+
     return this.usersService.create(createUserDto);
+  }
+  @Post('create')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.TENANT_ADMIN)
+  async createUser(@Body() createUserDto: CreateUserDto, @Req() req) {
+    const currentTenantId = req?.user?.tenant_id;
+
+    const existingUser = await this.usersService.findByEmail(
+      createUserDto.email,
+    );
+
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
+    }
+
+    // Override tenantId from authenticated user
+    const newUser = await this.usersService.create({
+      ...createUserDto,
+      tenant_id: currentTenantId,
+    });
+
+    return newUser;
   }
 
   @Post('login')
@@ -25,6 +64,10 @@ export class UsersController {
     return this.usersService.login(dto);
   }
 
+  @Post('refresh')
+  async refresh(@Body() refreshTokenDto: RefreshDto) {
+    return this.usersService.refreshToken(refreshTokenDto.refreshToken);
+  }
   // @Get()
   // findAll() {
   //   return this.usersService.findAll();

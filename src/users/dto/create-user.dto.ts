@@ -38,5 +38,7 @@ export class LoginDto {
 }
 
 export class RefreshDto {
-  @IsString() @IsNotEmpty() refreshToken: string;
+  @IsString()
+  @IsNotEmpty()
+  refreshToken: string;
 }
