@@ -5,6 +5,7 @@ import { User } from './user.model';
 import { InjectModel } from '@nestjs/sequelize';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
+import { UserRole } from 'src/enums/role.enum';
 
 const ACCESS_EXPIRES = process.env.JWT_ACCESS_EXPIRES || '15m';
 const REFRESH_EXPIRES = process.env.JWT_REFRESH_EXPIRES || '7d';
@@ -127,5 +128,18 @@ export class UsersService {
       console.log(err);
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
+  }
+
+  async findAll(tenantId: number, role?: UserRole): Promise<User[]> {
+    const whereClause: any = { tenant_id: tenantId };
+
+    if (role) {
+      whereClause.role = role;
+    }
+
+    return this.userModel.findAll({
+      where: whereClause,
+      raw: true,
+    });
   }
 }

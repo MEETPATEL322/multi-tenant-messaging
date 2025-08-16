@@ -11,7 +11,12 @@ import {
   Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto, LoginDto, RefreshDto } from './dto/create-user.dto';
+import {
+  CreateUserDto,
+  CreateUserTenantDto,
+  LoginDto,
+  RefreshDto,
+} from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Roles } from 'src/guard/roles.decorator';
 import { JwtAuthGuard } from 'src/guard/jwt-auth.guard';
@@ -36,10 +41,11 @@ export class UsersController {
 
     return this.usersService.create(createUserDto);
   }
+
   @Post('create')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.TENANT_ADMIN)
-  async createUser(@Body() createUserDto: CreateUserDto, @Req() req) {
+  async createUser(@Body() createUserDto: CreateUserTenantDto, @Req() req) {
     const currentTenantId = req?.user?.tenant_id;
 
     const existingUser = await this.usersService.findByEmail(
@@ -68,10 +74,13 @@ export class UsersController {
   async refresh(@Body() refreshTokenDto: RefreshDto) {
     return this.usersService.refreshToken(refreshTokenDto.refreshToken);
   }
-  // @Get()
-  // findAll() {
-  //   return this.usersService.findAll();
-  // }
+
+  @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.TENANT_ADMIN)
+  async findAll(@Req() req) {
+    return this.usersService.findAll(req.user.tenant_id, req.query.role);
+  }
 
   // @Get(':id')
   // findOne(@Param('id') id: string) {

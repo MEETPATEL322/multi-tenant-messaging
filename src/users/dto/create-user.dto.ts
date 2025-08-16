@@ -42,3 +42,20 @@ export class RefreshDto {
   @IsNotEmpty()
   refreshToken: string;
 }
+
+export class CreateUserTenantDto {
+  @IsNotEmpty()
+  @IsEmail()
+  email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(6)
+  password_hash: string;
+
+  @IsNotEmpty()
+  @IsEnum([UserRole.AGENT, UserRole.AUDITOR, UserRole.MANAGER], {
+    message: 'Role must be one of AGENT, AUDITOR, MANAGER',
+  })
+  role: UserRole;
+}
