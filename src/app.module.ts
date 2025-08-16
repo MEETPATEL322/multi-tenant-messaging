@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { UsersModule } from './users/users.module';
+import { TenantModule } from './tenant/tenant.module';
 
 @Module({
   imports: [
@@ -29,6 +30,8 @@ import { UsersModule } from './users/users.module';
     }),
 
     UsersModule,
+
+    TenantModule,
   ],
   controllers: [AppController],
   providers: [AppService],
