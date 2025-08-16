@@ -12,7 +12,6 @@ import { TenantModule } from './tenant/tenant.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-
     SequelizeModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -24,7 +23,7 @@ import { TenantModule } from './tenant/tenant.module';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
         autoLoadModels: true, // loads models from SequelizeModule.forFeature
-        synchronize: false,   // turn off built-in sync
+        synchronize: false, // turn off built-in sync
         logging: false,
       }),
     }),

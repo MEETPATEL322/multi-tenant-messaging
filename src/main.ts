@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import rateLimit from 'express-rate-limit';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,7 +13,17 @@ async function bootstrap() {
       transform: true, // Auto transform query/body into DTO instances
     }),
   );
-  
+
+  // Apply global rate limiter
+  app.use(
+    rateLimit({
+      windowMs: 60 * 1000, // 60 seconds
+      max: 5, // limit each IP to 5 requests per window
+      message:
+        'Too many requests from this IP, please try again after a minute',
+    }),
+  );
+
   const config = new DocumentBuilder()
     .setTitle('=Multi tenant Messaging Service')
     .setDescription('API for multi-tenant WAHA messaging integration')
